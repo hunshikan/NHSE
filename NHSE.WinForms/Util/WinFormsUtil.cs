@@ -83,20 +83,13 @@ internal static class WinFormsUtil
     /// </summary>
     /// <param name="child"></param>
     /// <param name="parent"></param>
-    internal static void CenterToForm(this Control child, Control parent)
+    internal static void CenterToForm(this Control child, Control parent) => child.Location = GetCenterLocation(child, parent);
+
+    internal static Point GetCenterLocation(Control child, Control parent)
     {
         int x = parent.Location.X + ((parent.Width - child.Width) / 2);
         int y = parent.Location.Y + ((parent.Height - child.Height) / 2);
-        child.Location = new Point(Math.Max(x, 0), Math.Max(y, 0));
-    }
-
-    /// <summary>
-    /// Sets the application color mode based on the <paramref name="theme"/> <typeparamref name="int"/> passed to it and stores it in the application <see cref="Settings"/>.
-    /// </summary>
-    /// <param name="theme"></param>
-    public static void SetApplicationTheme(SystemColorMode theme)
-    {
-        Application.SetColorMode(theme);
-        Program.Settings.DarkMode = theme;
+        var location = new Point(Math.Max(x, 0), Math.Max(y, 0));
+        return location;
     }
 }

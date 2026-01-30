@@ -22,7 +22,9 @@ public partial class SysBotUI : Form
         InjectorUSB = injectorUSB;
 
         var offset = Bot.GetDefaultOffset();
+        offset = offset > 0 ? offset : StringUtil.GetHexValue(RamOffset.Text);
         Injector.SetWriteOffset(offset);
+
         RamOffset.Text = offset.ToString("X8");
         RamOffsetUSB.Text = offset.ToString("X8");
 
