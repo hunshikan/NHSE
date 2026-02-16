@@ -14,11 +14,17 @@ public sealed class MainSave : EncryptedFilePair
     public MainSave(ISaveFileProvider provider) : base(provider, "main") => Offsets = MainSaveOffsets.GetOffsets(Info);
 
     public Hemisphere Hemisphere { get => (Hemisphere)Data[Offsets.WeatherArea]; set => Data[Offsets.WeatherArea] = (byte)value; }
+    public Hemisphere TourHemisphere { get => (Hemisphere)Data[Offsets.TourHemisphere]; set => Data[Offsets.TourHemisphere] = (byte)value; }
     public AirportColor AirportThemeColor { get => (AirportColor)Data[Offsets.AirportThemeColor]; set => Data[Offsets.AirportThemeColor] = (byte)value; }
     public uint WeatherSeed
     {
         get => ReadUInt32LittleEndian(Data[Offsets.WeatherRandSeed..]);
         set => WriteUInt32LittleEndian(Data[Offsets.WeatherRandSeed..], value);
+    }
+    public uint TourWeatherSeed
+    {
+        get => ReadUInt32LittleEndian(Data[Offsets.TourWeatherRandSeed..]);
+        set => WriteUInt32LittleEndian(Data[Offsets.TourWeatherRandSeed..], value);
     }
 
     public byte CampsiteStatus { get => Data[Offsets.GSaveCampSite]; set => Data[Offsets.GSaveCampSite] = value; }
@@ -211,15 +217,15 @@ public sealed class MainSave : EncryptedFilePair
 
     public const ushort MapDesignNone = 0xF800;
 
-    public Memory<byte> MapDesignTileData => Raw.Slice(Offsets.MyDesignMap, (AcreWidth * LayerFieldItem.TilesPerAcreDim) * (AcreHeight * LayerFieldItem.TilesPerAcreDim) * sizeof(ushort));
-    public ushort[] GetMapDesignTiles() => MemoryMarshal.Cast<byte, ushort>(MapDesignTileData.Span).ToArray();
-    public void SetMapDesignTiles(ReadOnlySpan<ushort> value) => MemoryMarshal.Cast<ushort, byte>(value).CopyTo(MapDesignTileData.Span);
+    public Memory<byte> MapDesignTileData(int w, int h) => Raw.Slice(Offsets.MyDesignMap, (w * 16) * (h * 16) * sizeof(ushort));
+    public ushort[] GetMapDesignTiles(int w, int h) => MemoryMarshal.Cast<byte, ushort>(MapDesignTileData(w, h).Span).ToArray();
+    public void SetMapDesignTiles(ReadOnlySpan<ushort> value, int w, int h) => MemoryMarshal.Cast<ushort, byte>(value).CopyTo(MapDesignTileData(w, h).Span);
 
-    public void ClearDesignTiles()
+    public void ClearDesignTiles(int w, int h)
     {
-        var tiles = GetMapDesignTiles();
+        var tiles = GetMapDesignTiles(w, h);
         tiles.AsSpan().Fill(MapDesignNone);
-        SetMapDesignTiles(tiles);
+        SetMapDesignTiles(tiles, w, h);
     }
 
     private int FieldItemLayerSize => TotalFieldItemTileCount * Item.SIZE;
